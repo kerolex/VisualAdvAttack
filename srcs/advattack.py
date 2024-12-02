@@ -39,6 +39,8 @@ import numpy as np
 
 from tqdm import tqdm
 
+import cv2
+
 # PyTorch libraries
 import torch
 import torch.nn as nn
@@ -251,10 +253,31 @@ class VisualAdversarialAttack(nn.Module):
         print("Confidence of the class: {:.2f}".format(max_prob))
 
 
-    def save_image(self, out_filename):
+    def save_image(self, adv_img, out_filename):
         """ Save the attacked image to file.
         """
-        print("Save image to file")
+        print("Saving image to file ...")
+        mean = [0.485, 0.456, 0.406]
+        std = [0.229, 0.224, 0.225]
+        
+        for c in range(3):
+            adv_img[0,c,:,:] *= std[c]
+            adv_img[0,c,:,:] += mean[c]
+	
+            adv_img[adv_img > 1] = 1
+            adv_img[adv_img < 0] = 0
+        
+        img_save = (adv_img*255).round()
+
+        img_save = img_save.squeeze().cpu().detach().numpy()
+        img_save = np.uint8(img_save).transpose(1, 2, 0)
+        img_save = img_save[..., ::-1]
+        
+        cv2.imwrite(out_filename, img_save)
+
+        print("Saved!")
+
+       
     
     def run_attack(self, image_fn, attack="BIM"):
         """ Main function of the class to run the adversarial attack.
@@ -273,3 +296,4 @@ class VisualAdversarialAttack(nn.Module):
             adv_img = self.basic_iterative_method_attack(img_norm)
 
             self.predict_image_class(adv_img)
+            self.save_image(adv_img, os.path.join("resorces","adv_example.jpg"))

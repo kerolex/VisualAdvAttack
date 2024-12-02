@@ -37,6 +37,8 @@ from PIL import Image
 
 import numpy as np
 
+from tqdm import tqdm
+
 # PyTorch libraries
 import torch
 import torch.nn as nn
@@ -205,21 +207,26 @@ class VisualAdversarialAttack(nn.Module):
         target_class_var[idx_target] = 1
         target_class_var = target_class_var.unsqueeze(0).to(device)
 
+
         adv_img = image.clone()
-        adv_img = Variable(image, requires_grad=True)
+        adv_img = Variable(adv_img, requires_grad=True)
         adv_img.to(device)
 
-        for n in range(n_iters):
+        for n in tqdm(range(n_iters)):
+            tmp_img = adv_img.clone()
+            tmp_img.grad = None
+
             outputs = self.model(adv_img.unsqueeze(0))
 
             target_loss = loss(outputs.to(device), target_class_var)
             target_loss.backward()
 
-            bp()
-
-            adv_img.data = self.add_aversarial_perturbation(adv_img.data, image.grad.data)
+            adv_img = self.add_aversarial_perturbation(tmp_img, adv_img.grad)
             
-        bp()
+            adv_img = Variable(adv_img, requires_grad=True)
+            adv_img.to(device)           
+
+        return adv_img.clone()
 
 
 
@@ -263,6 +270,6 @@ class VisualAdversarialAttack(nn.Module):
 
         # Run the attack
         if attack == "BIM":
-            self.basic_iterative_method_attack(img_norm)
+            adv_img = self.basic_iterative_method_attack(img_norm)
 
-        print()
+            self.predict_image_class(adv_img)

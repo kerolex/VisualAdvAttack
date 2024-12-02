@@ -75,7 +75,8 @@ class VisualAdversarialAttack(nn.Module):
             raise Exception("The provided target label is not part of the vocabulary of the pre-trained model. Re-run with a label selected from resources/imagenet.class.")
         
         self.target_label = target_label
-    
+
+        self.model = self.load_model()
 
     def load_vocabulary(self):
         """ Load the list of classes from ImageNet.
@@ -99,12 +100,14 @@ class VisualAdversarialAttack(nn.Module):
         We use a PyTorch model, ResNet-18, pre-trained on ImageNet.
         Ref: https://pytorch.org/hub/pytorch_vision_resnet/
         """
-        self.model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18',  weights="IMAGENET1K_V1")
+        model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18',  weights="IMAGENET1K_V1")
 
-        for param in self.model.parameters():
+        for param in model.parameters():
             param.requires_grad = False
 
-        self.model.eval()
+        model.eval()
+
+        return model
     
     def set_img_transform(self):
         """Function to standardise the image with ImageNet values from training set.
@@ -196,8 +199,6 @@ class VisualAdversarialAttack(nn.Module):
         """
 
         assert(attack in ATTACKS) # Check that the passed attack is valid, if any
-
-        self.load_model()
 
         # Load and normalise the image with mean and std from ImageNet
         img_pil, img_norm = self.load_image(image_fn)

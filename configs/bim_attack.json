@@ -1,0 +1,10 @@
+{
+    "paths" : {
+        "root_dir" : "."
+    },
+    
+    "bim": {
+        "eps" : 4,
+        "img_size": 224
+    }
+}

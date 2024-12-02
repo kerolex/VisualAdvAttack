@@ -35,11 +35,17 @@ import os
 # Image processing, vision libraries
 from PIL import Image
 
+import numpy as np
+
 # PyTorch libraries
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as transforms
+from torch.autograd import Variable
+
+import torch.optim as optim
+import torch.optim.lr_scheduler as lr_scheduler
 
 from srcs.utils import (
     device
@@ -80,6 +86,8 @@ class VisualAdversarialAttack(nn.Module):
         self.target_label = target_label
 
         self.load_model()
+
+        self.configure_optimizer()
 
         # Prepare image transformations
         self.set_img_transform()
@@ -144,13 +152,34 @@ class VisualAdversarialAttack(nn.Module):
         full_im = self.full_im_transform(img_pil)
 
         return img_pil, full_im
+    
+    def configure_optimizer(self):
+        """ """
+        params = self.config["params"]
+        if params["optimizer"] == "Adam":
+            self.optimizer = getattr(optim, params["optimizer"])(
+                filter(lambda p: p.requires_grad, self.model.parameters()),
+                lr=params["init_lr"],
+                weight_decay=params["weight_decay"],
+            )
+            self.optimizer_name = "Adam"
 
-    def add_aversarial_perturbation(self, image):
+    def add_aversarial_perturbation(self, adv_example, img_grad):
         """
         """
+        # Compute adversarial noise as a small perturbation with respect to the image gradients
+        adv_noise = self.delta * img_grad.sign()
+
+        # Compute adversarial example
+        adv_example -= adv_noise
+
+        # Clip image at the top and bottom
+        adv_example_clipped = torch.clamp(adv_example, min=0, max=1)
+
+        return adv_example_clipped
 
 
-    def basic_iterative_method_attack(self, image):
+    def basic_iterative_method_attack(self, image, add_img):
         """ Attack the model with the basic iterative method.
 
         This is a targeted attack: the user provides the label to make 
@@ -170,8 +199,24 @@ class VisualAdversarialAttack(nn.Module):
 
         loss = nn.CrossEntropyLoss()
 
+        target_class_var = Variable(torch.from_numpy(np.zeros(len(self.imagenet_classes))))
+        idx_target = self.imagenet_classes.index(self.target_label)
+        target_class_var[idx_target] = 1
+        target_class_var = target_class_var.to(device)
+
+        adv_img = image.clone()
+        adv_img = Variable(image, requires_grad=True)
+        adv_img.to(device)
+
         for n in range(n_iters):
-            self.add_aversarial_perturbation(image)
+            adv_img.data = self.add_aversarial_perturbation(adv_img.data, image.grad.data)
+
+            outputs = self.model(adv_img.unsqueeze(0))
+
+            target_loss = loss(outputs, target_class_var)
+            target_loss.backward()
+
+        bp()
 
 
 
@@ -190,7 +235,7 @@ class VisualAdversarialAttack(nn.Module):
         max_prob = torch.max(out_probs)
         max_prob_ind = torch.argmax(out_probs)
 
-        top_class = self.imagenet_classes[max_prob_ind[0]]
+        top_class = self.imagenet_classes[max_prob_ind]
 
         print("Predicted class for input image: " + top_class)
         print("Confidence of the class: {:.2f}".format(max_prob))

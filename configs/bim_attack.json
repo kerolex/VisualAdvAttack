@@ -4,7 +4,10 @@
     },
 
     "params": {
-        "seed": 789
+        "seed": 789,
+        "optimizer" : "Adam",
+        "init_lr": 0.001,
+        "weight_decay": 0.0        
     },
     
     "bim": {

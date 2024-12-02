@@ -179,9 +179,9 @@ class VisualAdversarialAttack(nn.Module):
         adv_example -= adv_noise
 
         # Clip image at the top and bottom
-        adv_example_clipped = torch.clamp(adv_example, min=0, max=1)
+        # adv_example_clipped = torch.clamp(adv_example, min=0, max=1)
 
-        return adv_example_clipped
+        return adv_example
 
 
     def basic_iterative_method_attack(self, image):
@@ -209,7 +209,6 @@ class VisualAdversarialAttack(nn.Module):
         target_class_var[idx_target] = 1
         target_class_var = target_class_var.unsqueeze(0).to(device)
 
-
         adv_img = image.clone()
         adv_img = Variable(adv_img, requires_grad=True)
         adv_img.to(device)
@@ -228,7 +227,7 @@ class VisualAdversarialAttack(nn.Module):
             adv_img = self.add_aversarial_perturbation(tmp_img, adv_img.grad)
             
             adv_img = Variable(adv_img, requires_grad=True)
-            adv_img.to(device)           
+            adv_img.to(device)      
 
         return adv_img.clone()
 
@@ -265,13 +264,12 @@ class VisualAdversarialAttack(nn.Module):
         for c in range(3):
             adv_img[c,:,:] *= std[c]
             adv_img[c,:,:] += mean[c]
-	
-            adv_img[adv_img > 1] = 1
-            adv_img[adv_img < 0] = 0
+
+            adv_img = torch.clamp(adv_img, min=0, max=1)
         
         img_save = (adv_img*255).round()
 
-        img_save = img_save.squeeze().cpu().detach().numpy()
+        img_save = img_save.cpu().detach().numpy()
         img_save = np.uint8(img_save).transpose(1, 2, 0)
         img_save = img_save[..., ::-1]
         

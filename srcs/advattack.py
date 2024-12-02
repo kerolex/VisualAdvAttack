@@ -215,16 +215,18 @@ class VisualAdversarialAttack(nn.Module):
 
         print("Number of iterations for the attack: {:d}".format(n_iters))
 
-        for n in tqdm(range(n_iters)):
-            tmp_img = adv_img.clone()
+        for n in range(n_iters):
+            print("Iteration #{:d}/{:d}".format(n+1,n_iters))
+
+            tmp_img = image.clone()
             tmp_img.grad = None
 
-            outputs = self.model(adv_img.unsqueeze(0))
+            outputs, _, _ = self.predict_image_class(adv_img.unsqueeze(0))
 
             target_loss = loss(outputs.to(device), target_class_var)
             target_loss.backward()
 
-            adv_img = self.add_aversarial_perturbation(tmp_img, adv_img.grad)
+            adv_img = self.add_aversarial_perturbation(adv_img, adv_img.grad)
             
             adv_img = Variable(adv_img, requires_grad=True)
             adv_img.to(device)      
@@ -253,6 +255,8 @@ class VisualAdversarialAttack(nn.Module):
         print("Predicted class for input image: " + top_class)
         print("Confidence of the class: {:.2f}".format(max_prob))
 
+        return outputs, top_class, max_prob
+
 
     def save_image(self, adv_img, out_filename):
         """ Save the attacked image to file.
@@ -276,8 +280,6 @@ class VisualAdversarialAttack(nn.Module):
         cv2.imwrite(out_filename, img_save)
 
         print("Saved!")
-
-       
     
     def run_attack(self, image_fn, attack="BIM"):
         """ Main function of the class to run the adversarial attack.
@@ -295,5 +297,5 @@ class VisualAdversarialAttack(nn.Module):
         if attack == "BIM":
             adv_img = self.basic_iterative_method_attack(img_norm)
 
-            self.predict_image_class(adv_img)
+            _, top_class, max_prob = self.predict_image_class(adv_img)
             self.save_image(adv_img, os.path.join(self.repo_dir,"resources","adv_example.jpg"))

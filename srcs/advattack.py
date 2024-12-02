@@ -59,6 +59,8 @@ class VisualAdversarialAttack(nn.Module):
         config,
         target_label="gibbon",
     ):
+        super(VisualAdversarialAttack, self).__init__()
+
         self.config = config
 
         self.repo_dir = config["paths"]["root_dir"]
@@ -76,7 +78,7 @@ class VisualAdversarialAttack(nn.Module):
         
         self.target_label = target_label
 
-        self.model = self.load_model()
+        self.load_model()
 
     def load_vocabulary(self):
         """ Load the list of classes from ImageNet.
@@ -107,7 +109,7 @@ class VisualAdversarialAttack(nn.Module):
 
         model.eval()
 
-        return model
+        self.model = model
     
     def set_img_transform(self):
         """Function to standardise the image with ImageNet values from training set.
@@ -135,7 +137,7 @@ class VisualAdversarialAttack(nn.Module):
         """
         img_pil = Image.open(image_fn).convert("RGB")
 
-        full_im = self.full_im_transform(img_pil)
+        full_im = self.set_img_transform(img_pil)
 
         return img_pil, full_im
 

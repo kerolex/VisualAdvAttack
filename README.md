@@ -1,4 +1,5 @@
 # VisualAdvAttack
+
 Library for Visual Adversarial Attacks. 
 
 This is a simple software that performs the Basic Iterative Method as visual adversarial attack on 
@@ -34,7 +35,7 @@ NOTE: Installation to verify (might not work at the moment, as I used my own pre
 
 ## Instructions/demo
 
-To run the software, you can do in 2 ways: use the provided bash script or running from command line.
+To run the software, you can do it in 2 ways: use the provided bash script or running from command line.
 Make sure to install the conda environment first or have a conda environment with the corresponding packages already installed.
 
 
@@ -85,6 +86,12 @@ Confidence of the class: 1.00
 
 The outputted image is available at ``resources/adv_example_bak.jpg``
 
+Input image
+![Input image (dog)](/resources/dog.jpg)
+
+Output image
+![Adversarial example](/resources/adv_example_bak.jpg)
+
 ## Known issues
 * The output image is not at the original resolution
 * The image has noticeable changes that could be due to the saving (to verify) or the algorithm itself
@@ -97,5 +104,5 @@ The outputted image is available at ``resources/adv_example_bak.jpg``
 * Save predicted class and confidence (txt file, or on the image, or else)
 
 
-## References
+## Reference
 * Kurakin, et al., ADVERSARIAL EXAMPLES IN THE PHYSICAL WORLD, ICLR 2017, https://arxiv.org/pdf/1607.02533 (Sec.2.2)

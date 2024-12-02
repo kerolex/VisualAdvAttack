@@ -99,12 +99,11 @@ class VisualAdversarialAttack(nn.Module):
         We use a PyTorch model, ResNet-18, pre-trained on ImageNet.
         Ref: https://pytorch.org/hub/pytorch_vision_resnet/
         """
-        model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=True)
+        self.model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18',  weights="IMAGENET1K_V2")
 
-        for param in model.parameters():
+        for param in self.model.parameters():
             param.requires_grad = False
 
-        self.model = model.to(device)
         self.model.eval()
     
     def set_img_transform(self):
@@ -187,10 +186,10 @@ class VisualAdversarialAttack(nn.Module):
         print("Confidence of the class: {:.2f}".format(max_prob_ind[0][0]))
 
 
-    def save_image(self):
+    def save_image(self, out_filename):
         """ Save the attacked image to file.
         """
-        
+        print("Save image to file")
     
     def run_attack(self, image_fn, attack="BIM"):
         """ Main function of the class to run the adversarial attack.

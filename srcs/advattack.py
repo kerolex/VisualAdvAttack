@@ -32,9 +32,13 @@
 
 import os
 
+# Image processing, vision libraries
+from PIL import Image
+
 # PyTorch libraries
 import torch
 import torch.nn as nn
+import torchvision.transforms as transforms
 
 from srcs.utils import (
     device
@@ -57,9 +61,10 @@ class VisualAdversarialAttack(nn.Module):
 
         self.repo_dir = config["paths"]["root_dir"]
 
-        # FGSM parameters
+        # FGSM/BIM parameters
         self.delta = 1/255. # We are going to use the image normalised to [0,1] (standardisation)
         self.eps = config["bim"]["eps"]
+        self.img_size = config["bim"]["img_size"]
         
         # Load ImageNet classes only once and re-use across the class.
         self.imagenet_classes = self.load_vocabulary()
@@ -101,6 +106,36 @@ class VisualAdversarialAttack(nn.Module):
 
         self.model = self.model.to(device)
         self.model.eval()
+    
+    def set_img_transform(self):
+        """Function to standardise the image with ImageNet values from training set.
+
+        This is a function that resizes an image to the required resolution by the chosen model
+        and normalises the values between 0 and 1 with the pre-computed values from ImageNet dataset.
+        """
+        normalize = transforms.Normalize(
+            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+        )  # imagenet values
+
+        self.full_im_transform = transforms.Compose(
+            [
+                transforms.Resize((self.img_size, self.img_size)),
+                transforms.ToTensor(),
+                normalize,
+            ]
+        )
+
+    def load_image(self, image_fn):
+        """Load the image from the filename into PIL format.
+
+        The image is also resized and normalised with ImageNet weights.
+        Both the PIL and transformed image are returned by the function.
+        """
+        img_pil = Image.open(image_fn).convert("RGB")
+
+        full_im = self.full_im_transform(img_pil)
+
+        return img_pil, full_im
 
     def add_aversarial_perturbation(self, image):
         """
@@ -157,12 +192,20 @@ class VisualAdversarialAttack(nn.Module):
         """
         
     
-    def run_attack(self, image, attack="BIM"):
+    def run_attack(self, image_fn, attack="BIM"):
         """ Main function of the class to run the adversarial attack.
         """
 
-        assert(attack in ATTACKS)
+        assert(attack in ATTACKS) # Check that the passed attack is valid, if any
 
-        self.basic_iterative_method_attack(image)
+        # Load and normalise the image with mean and std from ImageNet
+        img_pil, img_norm = self.load_image(image_fn)
+
+        # Evaluate the original image and its prediction
+        self.predict_image_class(img_norm)
+
+        # Run the attack
+        if attack == "BIM":
+            self.basic_iterative_method_attack(img_norm)
 
         print()

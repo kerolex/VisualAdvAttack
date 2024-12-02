@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# 
+#
 #
 ##############################################################################
 # Authors:
@@ -48,12 +48,10 @@ sys.path.insert(0, dirlevel0)
 
 from srcs.advattack import VisualAdversarialAttack
 
-from srcs.utils import (
-    device,
-    set_seed
-)
+from srcs.utils import device, set_seed
 
 #############################################################################
+
 
 def GetParser(desc=""):
     """ """
@@ -62,30 +60,24 @@ def GetParser(desc=""):
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    parser.add_argument(
-        "--seed", 
-        type=int
-        )
-   
+    parser.add_argument("--seed", type=int)
 
     parser.add_argument(
-        "--config", 
-        required=True, 
-        help="Please provide a config.json file"
+        "--config", required=True, help="Please provide a config.json file"
     )
 
     parser.add_argument(
-        "--image", 
-        type=str, 
+        "--image",
+        type=str,
         required=True,
-        help="Provide input image to misclassify"
+        help="Provide input image to misclassify",
     )
 
     parser.add_argument(
-        "--target_class", 
-        type=str, 
+        "--target_class",
+        type=str,
         required=True,
-        help="Please provide a target class from the list of classes in ImageNet (see file resources/imagenet.names)"
+        help="Please provide a target class from the list of classes in ImageNet (see file resources/imagenet.names)",
     )
 
     return parser

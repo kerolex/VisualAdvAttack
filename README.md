@@ -22,16 +22,14 @@ conda create -n viadvattack
 conda activate viadvattack
 
 conda install pytorch==1.12.1 torchvision==0.13.1 cudatoolkit=10.2 pyg -c pytorch -c pyg
-conda install tqdm pillow c anaconda -c conda-forge
 
 python -m pip install -U pip
-python -m pip install -U black
+python -m pip install -U black Pillow tqdm
+
 
 # Vision libraries
 python -m pip install -U opencv-python
 ```
-
-NOTE: Installation to verify (might not work at the moment, as I used my own previously installed environment).
 
 ## Instructions/demo
 

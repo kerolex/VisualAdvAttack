@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# 
+#
 #
 ##############################################################################
 # Authors:
@@ -49,22 +49,22 @@ import torchvision.transforms as transforms
 from torch.autograd import Variable
 
 import torch.optim as optim
+
 # import torch.optim.lr_scheduler as lr_scheduler
 
-from srcs.utils import (
-    device
-)
+from srcs.utils import device
 
 from pdb import set_trace as bp  # This is only for debugging
 
 ##########################################################################################
 # The class could be extended to different attacks. Names captured by this global list.
 
-ATTACKS=["BIM"] 
+ATTACKS = ["BIM"]
+
 
 class VisualAdversarialAttack(nn.Module):
-    """ Class for visual adversarial attacks on images.
-    """
+    """Class for visual adversarial attacks on images."""
+
     def __init__(
         self,
         config,
@@ -77,16 +77,20 @@ class VisualAdversarialAttack(nn.Module):
         self.repo_dir = config["paths"]["root_dir"]
 
         # FGSM/BIM parameters
-        self.delta = 1/255. # We are going to use the image normalised to [0,1] (standardisation)
+        self.delta = (
+            1 / 255.0
+        )  # We are going to use the image normalised to [0,1] (standardisation)
         self.eps = config["bim"]["eps"]
         self.img_size = config["bim"]["img_size"]
-        
+
         # Load ImageNet classes only once and re-use across the class.
         self.imagenet_classes = self.load_vocabulary()
 
         if target_label not in self.imagenet_classes:
-            raise Exception("The provided target label is not part of the vocabulary of the pre-trained model. Re-run with a label selected from resources/imagenet.class.")
-        
+            raise Exception(
+                "The provided target label is not part of the vocabulary of the pre-trained model. Re-run with a label selected from resources/imagenet.class."
+            )
+
         self.target_label = target_label
 
         self.load_model()
@@ -97,8 +101,7 @@ class VisualAdversarialAttack(nn.Module):
         self.set_img_transform()
 
     def load_vocabulary(self):
-        """ Load the list of classes from ImageNet.
-        """
+        """Load the list of classes from ImageNet."""
         fp = open(
             os.path.join(
                 self.repo_dir,
@@ -113,12 +116,14 @@ class VisualAdversarialAttack(nn.Module):
         return names
 
     def load_model(self):
-        """ Load a pre-trained model to predict the class of an input image.
+        """Load a pre-trained model to predict the class of an input image.
 
         We use a PyTorch model, ResNet-18, pre-trained on ImageNet.
         Ref: https://pytorch.org/hub/pytorch_vision_resnet/
         """
-        model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18',  weights="IMAGENET1K_V1")
+        model = torch.hub.load(
+            "pytorch/vision:v0.10.0", "resnet18", weights="IMAGENET1K_V1"
+        )
 
         # for param in model.parameters():
         #     param.requires_grad = False
@@ -126,7 +131,7 @@ class VisualAdversarialAttack(nn.Module):
         model.eval()
 
         self.model = model
-    
+
     def set_img_transform(self):
         """Function to standardise the image with ImageNet values from training set.
 
@@ -156,7 +161,7 @@ class VisualAdversarialAttack(nn.Module):
         full_im = self.full_im_transform(img_pil)
 
         return img_pil, full_im
-    
+
     def configure_optimizer(self):
         """ """
         params = self.config["params"]
@@ -170,8 +175,7 @@ class VisualAdversarialAttack(nn.Module):
             self.optimizer_name = "Adam"
 
     def add_aversarial_perturbation(self, adv_example, img_grad):
-        """
-        """
+        """ """
         # Compute adversarial noise as a small perturbation with respect to the image gradients
         adv_noise = self.delta * img_grad.sign()
 
@@ -183,11 +187,10 @@ class VisualAdversarialAttack(nn.Module):
 
         return adv_example
 
-
     def basic_iterative_method_attack(self, image):
-        """ Attack the model with the basic iterative method.
+        """Attack the model with the basic iterative method.
 
-        This is a targeted attack: the user provides the label to make 
+        This is a targeted attack: the user provides the label to make
         the model misclassifies the input image.
 
         Reference:
@@ -196,17 +199,19 @@ class VisualAdversarialAttack(nn.Module):
         https://arxiv.org/pdf/1607.02533
         Sec.2.2
 
-        TODO: Unnoticeable part still to accomplish based on this implemented algorithm. 
+        TODO: Unnoticeable part still to accomplish based on this implemented algorithm.
 
         Arguments:
             - image
         """
         # Number of iterations for the BIM attack (see paper)
         n_iters = int(min(self.eps + 4, self.eps * 1.25))
-        
+
         loss = nn.CrossEntropyLoss()
 
-        target_class_var = Variable(torch.from_numpy(np.zeros(len(self.imagenet_classes))))
+        target_class_var = Variable(
+            torch.from_numpy(np.zeros(len(self.imagenet_classes)))
+        )
         idx_target = self.imagenet_classes.index(self.target_label)
         target_class_var[idx_target] = 1
         target_class_var = target_class_var.unsqueeze(0).to(device)
@@ -218,7 +223,7 @@ class VisualAdversarialAttack(nn.Module):
         print("Number of iterations for the attack: {:d}".format(n_iters))
 
         for n in range(n_iters):
-            print("Iteration #{:d}/{:d}".format(n+1,n_iters))
+            print("Iteration #{:d}/{:d}".format(n + 1, n_iters))
 
             tmp_img = adv_img.clone()
             tmp_img.grad = None
@@ -229,18 +234,16 @@ class VisualAdversarialAttack(nn.Module):
             target_loss.backward()
 
             adv_img = self.add_aversarial_perturbation(tmp_img, adv_img.grad)
-            
-            adv_img = Variable(adv_img, requires_grad=True)     
+
+            adv_img = Variable(adv_img, requires_grad=True)
 
         return adv_img.clone()
 
-
-
     def predict_image_class(self, image):
-        """ Predict the most likely class of the input image.
+        """Predict the most likely class of the input image.
 
-        The model predicts the logits of the input image (1000 classes for imagenet). 
-        Logits are converted into probabilities using softmax. 
+        The model predicts the logits of the input image (1000 classes for imagenet).
+        Logits are converted into probabilities using softmax.
         We get the class (string) corresponding to the class with the top confidence.
         """
         if len(image.shape) == 3:
@@ -261,35 +264,34 @@ class VisualAdversarialAttack(nn.Module):
 
         return outputs, top_class, max_prob
 
-
     def save_image(self, adv_img, out_filename):
-        """ Save the attacked image to file.
-        """
+        """Save the attacked image to file."""
         print("Saving image to file ...")
         mean = [0.485, 0.456, 0.406]
         std = [0.229, 0.224, 0.225]
-        
+
         for c in range(3):
-            adv_img[c,:,:] *= std[c]
-            adv_img[c,:,:] += mean[c]
+            adv_img[c, :, :] *= std[c]
+            adv_img[c, :, :] += mean[c]
 
             adv_img = torch.clamp(adv_img, min=0, max=1)
-        
-        img_save = (adv_img*255).round()
+
+        img_save = (adv_img * 255).round()
 
         img_save = img_save.cpu().detach().numpy()
         img_save = np.uint8(img_save).transpose(1, 2, 0)
         img_save = img_save[..., ::-1]
-        
+
         cv2.imwrite(out_filename, img_save)
 
         print("Saved!")
-    
-    def run_attack(self, image_fn, attack="BIM"):
-        """ Main function of the class to run the adversarial attack.
-        """
 
-        assert(attack in ATTACKS) # Check that the passed attack is valid, if any
+    def run_attack(self, image_fn, attack="BIM"):
+        """Main function of the class to run the adversarial attack."""
+
+        assert (
+            attack in ATTACKS
+        )  # Check that the passed attack is valid, if any
 
         # Load and normalise the image with mean and std from ImageNet
         img_pil, img_norm = self.load_image(image_fn)
@@ -302,4 +304,7 @@ class VisualAdversarialAttack(nn.Module):
             adv_img = self.basic_iterative_method_attack(img_norm)
 
             _, top_class, max_prob = self.predict_image_class(adv_img)
-            self.save_image(adv_img, os.path.join(self.repo_dir,"resources","adv_example.jpg"))
+            self.save_image(
+                adv_img,
+                os.path.join(self.repo_dir, "resources", "adv_example.jpg"),
+            )

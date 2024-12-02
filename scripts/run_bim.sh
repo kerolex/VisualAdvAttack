@@ -49,6 +49,6 @@ conda activate viadvattack
 CUDA_VISIBLE_DEVICES=$CUDA_DEVICE python srcs/main.py                \
     --config                $CONFIG_FILE        \
     --image                 $IMG                \
-    --target_label          $TARGET         
+    --target_class          $TARGET
 
 conda deactivate

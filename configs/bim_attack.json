@@ -2,6 +2,10 @@
     "paths" : {
         "root_dir" : "."
     },
+
+    "params": {
+        "seed": 789
+    },
     
     "bim": {
         "eps" : 4,

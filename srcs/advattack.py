@@ -242,7 +242,10 @@ class VisualAdversarialAttack(nn.Module):
         Logits are converted into probabilities using softmax. 
         We get the class (string) corresponding to the class with the top confidence.
         """
-        outputs = self.model(image.unsqueeze(0))
+        if len(image.shape) == 3:
+            outputs = self.model(image.unsqueeze(0))
+        else:
+            outputs = self.model(image)
 
         # convert logits into probabilities
         out_probs = F.softmax(outputs)

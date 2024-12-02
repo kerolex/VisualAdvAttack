@@ -197,26 +197,28 @@ class VisualAdversarialAttack(nn.Module):
         """
         # Number of iterations for the BIM attack (see paper)
         n_iters = int(min(self.eps + 4, self.eps * 1.25))
-
+        
         loss = nn.CrossEntropyLoss()
 
         target_class_var = Variable(torch.from_numpy(np.zeros(len(self.imagenet_classes))))
         idx_target = self.imagenet_classes.index(self.target_label)
         target_class_var[idx_target] = 1
-        target_class_var = target_class_var.to(device)
+        target_class_var = target_class_var.unsqueeze(0).to(device)
 
         adv_img = image.clone()
         adv_img = Variable(image, requires_grad=True)
         adv_img.to(device)
 
         for n in range(n_iters):
-            adv_img.data = self.add_aversarial_perturbation(adv_img.data, image.grad.data)
-
             outputs = self.model(adv_img.unsqueeze(0))
 
-            target_loss = loss(outputs, target_class_var)
+            target_loss = loss(outputs.to(device), target_class_var)
             target_loss.backward()
 
+            bp()
+
+            adv_img.data = self.add_aversarial_perturbation(adv_img.data, image.grad.data)
+            
         bp()
 
 

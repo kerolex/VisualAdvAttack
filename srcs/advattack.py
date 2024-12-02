@@ -116,8 +116,8 @@ class VisualAdversarialAttack(nn.Module):
         """
         model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18',  weights="IMAGENET1K_V1")
 
-        for param in model.parameters():
-            param.requires_grad = False
+        # for param in model.parameters():
+        #     param.requires_grad = False
 
         model.eval()
 
@@ -156,6 +156,9 @@ class VisualAdversarialAttack(nn.Module):
     def configure_optimizer(self):
         """ """
         params = self.config["params"]
+
+        bp()
+
         if params["optimizer"] == "Adam":
             self.optimizer = getattr(optim, params["optimizer"])(
                 filter(lambda p: p.requires_grad, self.model.parameters()),

@@ -109,6 +109,4 @@ if __name__ == "__main__":
     set_seed(config["params"]["seed"])
 
     bim_attack = VisualAdversarialAttack(config, args.target_class)
-    bim_attack.run(args.image)
-
-
+    bim_attack.run_attack(args.image)

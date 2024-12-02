@@ -108,5 +108,5 @@ if __name__ == "__main__":
 
     set_seed(config["params"]["seed"])
 
-    VisualAdversarialAttack(config, args.target_label)
+    VisualAdversarialAttack(config, args.target_class)
 

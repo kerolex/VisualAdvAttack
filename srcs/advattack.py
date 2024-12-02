@@ -44,6 +44,8 @@ from srcs.utils import (
     device
 )
 
+from pdb import set_trace as bp  # This is only for debugging
+
 ##########################################################################################
 # The class could be extended to different attacks. Names captured by this global list.
 
@@ -69,12 +71,10 @@ class VisualAdversarialAttack(nn.Module):
         # Load ImageNet classes only once and re-use across the class.
         self.imagenet_classes = self.load_vocabulary()
 
-        if target_label is not self.imagenet_classes:
+        if target_label not in self.imagenet_classes:
             raise Exception("The provided target label is not part of the vocabulary of the pre-trained model. Re-run with a label selected from resources/imagenet.class.")
         
         self.target_label = target_label
-
-        self.load_model()
     
 
     def load_vocabulary(self):
@@ -99,12 +99,12 @@ class VisualAdversarialAttack(nn.Module):
         We use a PyTorch model, ResNet-18, pre-trained on ImageNet.
         Ref: https://pytorch.org/hub/pytorch_vision_resnet/
         """
-        self.model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=True)
+        model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=True)
 
-        for param in self.model.parameters():
+        for param in model.parameters():
             param.requires_grad = False
 
-        self.model = self.model.to(device)
+        self.model = model.to(device)
         self.model.eval()
     
     def set_img_transform(self):
@@ -197,6 +197,8 @@ class VisualAdversarialAttack(nn.Module):
         """
 
         assert(attack in ATTACKS) # Check that the passed attack is valid, if any
+
+        self.load_model()
 
         # Load and normalise the image with mean and std from ImageNet
         img_pil, img_norm = self.load_image(image_fn)

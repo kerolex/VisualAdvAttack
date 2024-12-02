@@ -80,6 +80,9 @@ class VisualAdversarialAttack(nn.Module):
 
         self.load_model()
 
+        # Prepare image transformations
+        self.set_img_transform()
+
     def load_vocabulary(self):
         """ Load the list of classes from ImageNet.
         """
@@ -137,7 +140,7 @@ class VisualAdversarialAttack(nn.Module):
         """
         img_pil = Image.open(image_fn).convert("RGB")
 
-        full_im = self.set_img_transform(img_pil)
+        full_im = self.full_im_transform(img_pil)
 
         return img_pil, full_im
 

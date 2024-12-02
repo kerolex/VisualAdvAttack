@@ -38,6 +38,7 @@ from PIL import Image
 # PyTorch libraries
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torchvision.transforms as transforms
 
 from srcs.utils import (
@@ -181,17 +182,18 @@ class VisualAdversarialAttack(nn.Module):
         Logits are converted into probabilities using softmax. 
         We get the class (string) corresponding to the class with the top confidence.
         """
-        outputs = self.model(image)
+        outputs = self.model(image.unsqueeze(0))
 
         # convert logits into probabilities
-        out_probs = torch.softmax(outputs)
+        out_probs = F.softmax(outputs)
 
-        max_prob_ind = torch.max(out_probs)
+        max_prob = torch.max(out_probs)
+        max_prob_ind = torch.argmax(out_probs)
 
-        top_class = self.imagenet_classes[max_prob_ind[0][1]]
+        top_class = self.imagenet_classes[max_prob_ind[0]]
 
         print("Predicted class for input image: " + top_class)
-        print("Confidence of the class: {:.2f}".format(max_prob_ind[0][0]))
+        print("Confidence of the class: {:.2f}".format(max_prob))
 
 
     def save_image(self, out_filename):

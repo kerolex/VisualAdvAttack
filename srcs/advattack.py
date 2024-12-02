@@ -99,7 +99,7 @@ class VisualAdversarialAttack(nn.Module):
         We use a PyTorch model, ResNet-18, pre-trained on ImageNet.
         Ref: https://pytorch.org/hub/pytorch_vision_resnet/
         """
-        self.model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18',  weights="IMAGENET1K_V2")
+        self.model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18',  weights="IMAGENET1K_V1")
 
         for param in self.model.parameters():
             param.requires_grad = False

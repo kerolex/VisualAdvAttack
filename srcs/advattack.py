@@ -37,7 +37,7 @@ from PIL import Image
 
 import numpy as np
 
-from tqdm import tqdm
+# from tqdm import tqdm
 
 import cv2
 
@@ -49,7 +49,7 @@ import torchvision.transforms as transforms
 from torch.autograd import Variable
 
 import torch.optim as optim
-import torch.optim.lr_scheduler as lr_scheduler
+# import torch.optim.lr_scheduler as lr_scheduler
 
 from srcs.utils import (
     device
@@ -196,6 +196,8 @@ class VisualAdversarialAttack(nn.Module):
         https://arxiv.org/pdf/1607.02533
         Sec.2.2
 
+        TODO: Unnoticeable part still to accomplish based on this implemented algorithm. 
+
         Arguments:
             - image
         """
@@ -218,7 +220,7 @@ class VisualAdversarialAttack(nn.Module):
         for n in range(n_iters):
             print("Iteration #{:d}/{:d}".format(n+1,n_iters))
 
-            tmp_img = image.clone()
+            tmp_img = adv_img.clone()
             tmp_img.grad = None
 
             outputs, _, _ = self.predict_image_class(adv_img.unsqueeze(0))
@@ -226,10 +228,9 @@ class VisualAdversarialAttack(nn.Module):
             target_loss = loss(outputs.to(device), target_class_var)
             target_loss.backward()
 
-            adv_img = self.add_aversarial_perturbation(adv_img, adv_img.grad)
+            adv_img = self.add_aversarial_perturbation(tmp_img, adv_img.grad)
             
-            adv_img = Variable(adv_img, requires_grad=True)
-            adv_img.to(device)      
+            adv_img = Variable(adv_img, requires_grad=True)     
 
         return adv_img.clone()
 

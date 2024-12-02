@@ -39,7 +39,7 @@ ROOT_DIR=$PWD
 CONFIG_FILE=$ROOT_DIR/configs/bim_attack.json
 
 IMG=resources/dog.jpg
-TARGET=gibbon
+TARGET=baboon
 ##############################################################################
 #
 # Activate the conda environment

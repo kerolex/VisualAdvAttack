@@ -214,6 +214,8 @@ class VisualAdversarialAttack(nn.Module):
         adv_img = Variable(adv_img, requires_grad=True)
         adv_img.to(device)
 
+        print("Number of iterations for the attack: {:d}".format(n_iters))
+
         for n in tqdm(range(n_iters)):
             tmp_img = adv_img.clone()
             tmp_img.grad = None
@@ -261,8 +263,8 @@ class VisualAdversarialAttack(nn.Module):
         std = [0.229, 0.224, 0.225]
         
         for c in range(3):
-            adv_img[0,c,:,:] *= std[c]
-            adv_img[0,c,:,:] += mean[c]
+            adv_img[c,:,:] *= std[c]
+            adv_img[c,:,:] += mean[c]
 	
             adv_img[adv_img > 1] = 1
             adv_img[adv_img < 0] = 0
@@ -296,4 +298,4 @@ class VisualAdversarialAttack(nn.Module):
             adv_img = self.basic_iterative_method_attack(img_norm)
 
             self.predict_image_class(adv_img)
-            self.save_image(adv_img, os.path.join("resorces","adv_example.jpg"))
+            self.save_image(adv_img, os.path.join(self.repo_dir,"resources","adv_example.jpg"))

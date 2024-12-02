@@ -56,6 +56,35 @@ The demo use the already provided image ``resources/dog.jpg``, available in PyTo
 
 Predicted class and confidence are outputted at the screen.
 
+The output of the available script should correspond to the following:
+```
+Predicted class for input image: Samoyed
+Confidence of the class: 0.84
+Number of iterations for the attack: 6
+Iteration #1/6
+Predicted class for input image: Samoyed
+Confidence of the class: 0.84
+Iteration #2/6
+Predicted class for input image: Samoyed
+Confidence of the class: 0.47
+Iteration #3/6
+Predicted class for input image: Samoyed
+Confidence of the class: 0.21
+Iteration #4/6
+Predicted class for input image: baboon
+Confidence of the class: 0.20
+Iteration #5/6
+Predicted class for input image: baboon
+Confidence of the class: 0.83
+Iteration #6/6
+Predicted class for input image: baboon
+Confidence of the class: 0.99
+Predicted class for input image: baboon
+Confidence of the class: 1.00
+```
+
+The outputted image is available at ``resources/adv_example_bak.jpg``
+
 ## Known issues
 * The output image is not at the original resolution
 * The image has noticeable changes that could be due to the saving (to verify) or the algorithm itself

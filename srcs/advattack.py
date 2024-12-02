@@ -157,8 +157,6 @@ class VisualAdversarialAttack(nn.Module):
         """ """
         params = self.config["params"]
 
-        bp()
-
         if params["optimizer"] == "Adam":
             self.optimizer = getattr(optim, params["optimizer"])(
                 filter(lambda p: p.requires_grad, self.model.parameters()),
@@ -182,7 +180,7 @@ class VisualAdversarialAttack(nn.Module):
         return adv_example_clipped
 
 
-    def basic_iterative_method_attack(self, image, add_img):
+    def basic_iterative_method_attack(self, image):
         """ Attack the model with the basic iterative method.
 
         This is a targeted attack: the user provides the label to make 

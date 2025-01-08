@@ -18,14 +18,13 @@ You can follow the following commands to install the conda environment.
 Please ensure to update according to your version.
 
 ```
-conda create -n viadvattack
+conda create -n viadvattack python=3.10
 conda activate viadvattack
 
-conda install pytorch==1.12.1 torchvision==0.13.1 cudatoolkit=10.2 pyg -c pytorch -c pyg
+conda install pytorch==1.12.1 torchvision==0.13.1 cudatoolkit=10.2 -c pytorch 
 
-python -m pip install -U pip
-python -m pip install -U black Pillow tqdm
-
+python -m pip install -U numpy==1.24.1 # For compatibility reasons
+python -m pip install -U black Pillow tqdm opencv-python
 
 # Vision libraries
 python -m pip install -U opencv-python
@@ -90,14 +89,14 @@ Input image
 Output image
 ![Adversarial example](/resources/adv_example_bak.jpg)
 
+## CHANGELOG
+Complete and full updates can be found in ![CHANGELOG.md](CHANGELOG.md). 
+The file follows the guidelines of https://keepachangelog.com/en/1.1.0/.
+
 ## Known issues
-* The output image is not at the original resolution
-* The image has noticeable changes that could be due to the saving (to verify) or the algorithm itself
 * The input does not handle multi-words (e.g., giant panda). 
 
 ## TODO
-* Modifying the implemented algorithm to make the adversarial image unnoticeable (e.g., adding as an auxiliary loss the L2-norm between the input image and the output adversarial image)
-* Fixing the output resolution
 * Fixig the handling of multi-words
 * Save predicted class and confidence (txt file, or on the image, or else)
 

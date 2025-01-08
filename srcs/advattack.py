@@ -46,7 +46,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as transforms
-from torch.autograd import Variable
 
 import torch.optim as optim
 
@@ -163,7 +162,14 @@ class VisualAdversarialAttack(nn.Module):
         return img_pil, full_im
 
     def configure_optimizer(self):
-        """ """
+        """ Configure the optimiser to use and its paramters.
+        
+        The function currently set only the Adam optimiser based on 
+        a conditional if check the external configuration file.
+        The conditional if can be extended to other options beyond Adam.
+
+        TODO: extend optimiser options based on needs.
+        """
         params = self.config["params"]
 
         if params["optimizer"] == "Adam":
@@ -173,6 +179,9 @@ class VisualAdversarialAttack(nn.Module):
                 weight_decay=params["weight_decay"],
             )
             self.optimizer_name = "Adam"
+
+        else:
+            raise Exception("Other optimisers not yet added to the list of options!")
 
     def add_aversarial_perturbation(self, adv_example, img_grad):
         """ """
@@ -209,16 +218,13 @@ class VisualAdversarialAttack(nn.Module):
 
         loss = nn.CrossEntropyLoss()
 
-        target_class_var = Variable(
-            torch.from_numpy(np.zeros(len(self.imagenet_classes)))
-        )
+        target_class_var = torch.from_numpy(np.zeros(len(self.imagenet_classes)))
         idx_target = self.imagenet_classes.index(self.target_label)
         target_class_var[idx_target] = 1
         target_class_var = target_class_var.unsqueeze(0).to(device)
 
         adv_img = image.clone()
-        adv_img = Variable(adv_img, requires_grad=True)
-        adv_img.to(device)
+        adv_img.requires_grad_().to(device)
 
         print("Number of iterations for the attack: {:d}".format(n_iters))
 
@@ -235,7 +241,7 @@ class VisualAdversarialAttack(nn.Module):
 
             adv_img = self.add_aversarial_perturbation(tmp_img, adv_img.grad)
 
-            adv_img = Variable(adv_img, requires_grad=True)
+            adv_img = torch.tensor(adv_img, requires_grad=True)
 
         return adv_img.clone()
 
@@ -264,7 +270,7 @@ class VisualAdversarialAttack(nn.Module):
 
         return outputs, top_class, max_prob
 
-    def save_image(self, adv_img, out_filename):
+    def save_image(self, adv_img, out_filename, original_img_size=None):
         """Save the attacked image to file."""
         print("Saving image to file ...")
         mean = [0.485, 0.456, 0.406]
@@ -274,9 +280,13 @@ class VisualAdversarialAttack(nn.Module):
             adv_img[c, :, :] *= std[c]
             adv_img[c, :, :] += mean[c]
 
-            adv_img = torch.clamp(adv_img, min=0, max=1)
+        adv_img = torch.clamp(adv_img, min=0, max=1)
 
         img_save = (adv_img * 255).round()
+
+        if original_img_size is not None:
+            t_resize = transforms.Resize((original_img_size[1], original_img_size[0]), interpolation=transforms.InterpolationMode.BILINEAR)
+            img_save= t_resize(img_save)
 
         img_save = img_save.cpu().detach().numpy()
         img_save = np.uint8(img_save).transpose(1, 2, 0)
@@ -307,4 +317,13 @@ class VisualAdversarialAttack(nn.Module):
             self.save_image(
                 adv_img,
                 os.path.join(self.repo_dir, "resources", "adv_example.jpg"),
+                original_img_size=img_pil.size
             )
+
+            self.save_image(
+                img_norm,
+                os.path.join(self.repo_dir, "resources", "original_resized.jpg"),
+                original_img_size=img_pil.size
+            )
+
+            
